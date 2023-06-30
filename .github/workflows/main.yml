@@ -27,16 +27,22 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run tests
+      - name: Run tests TeXOnFedora
         run: |
           if [ -f docker-compose.test.yml ]; then
             docker-compose --file docker-compose.test.yml build
             docker-compose --file docker-compose.test.yml run sut
           else
             cd TeXOnFedora && docker build . --file Dockerfile
-            cd -
-            cd TeXOnDotNet && docker build . --file TeXOnDotNet/Dockerfile
-            cd -
+          fi
+
+      - name: Run tests TeXOnDotNet
+        run: |
+          if [ -f docker-compose.test.yml ]; then
+            docker-compose --file docker-compose.test.yml build
+            docker-compose --file docker-compose.test.yml run sut
+          else
+            cd TeXOnDotNet && docker build . --file Dockerfile
           fi
 
   # Push image to GitHub Packages.
