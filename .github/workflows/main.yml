@@ -16,6 +16,7 @@ on:
 env:
   FEDORA_IMAGE_NAME: texlive-fedora
   DOTNET_IMAGE_NAME: texlive-dotnet
+  
 
 jobs:
   # Run tests.
@@ -32,8 +33,10 @@ jobs:
             docker-compose --file docker-compose.test.yml build
             docker-compose --file docker-compose.test.yml run sut
           else
-            docker build . --file TeXOnFedora/Dockerfile
-            docker build . --file TeXOnDotNet/Dockerfile
+            cd TeXOnFedora && docker build . --file Dockerfile
+            cd -
+            cd TeXOnDotNet && docker build . --file TeXOnDotNet/Dockerfile
+            cd -
           fi
 
   # Push image to GitHub Packages.
@@ -53,10 +56,16 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build TeX on Fedora image
-        run: docker build . --file TeXOnFedora/Dockerfile --tag $FEDORA_IMAGE_NAME
+        run: |
+          cd TeXOnFedora
+          docker build . --file Dockerfile --tag $FEDORA_IMAGE_NAME
+          cd -
         
       - name: Build TeX with .net on Ubuntu image
-        run: docker build . --file TeXOnDotNet/Dockerfile --tag $DOTNET_IMAGE_NAME
+        run: |
+          cd TeXOnDotNet
+          docker build . --file TeXOnDotNet/Dockerfile --tag $DOTNET_IMAGE_NAME
+          cd -
         
 
       - name: Log into registry
