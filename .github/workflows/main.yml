@@ -14,7 +14,9 @@ on:
   pull_request:
 
 env:
-  IMAGE_NAME: texlive-fedora-docker
+  FEDORA_IMAGE_NAME: texlive-fedora
+  DOTNET_IMAGE_NAME: texlive-dotnet
+  
 
 jobs:
   # Run tests.
@@ -25,13 +27,22 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run tests
+      - name: Run tests TeXOnFedora
         run: |
           if [ -f docker-compose.test.yml ]; then
             docker-compose --file docker-compose.test.yml build
             docker-compose --file docker-compose.test.yml run sut
           else
-            docker build . --file Dockerfile
+            cd TeXOnFedora && docker build . --file Dockerfile
+          fi
+
+      - name: Run tests TeXOnDotNet
+        run: |
+          if [ -f docker-compose.test.yml ]; then
+            docker-compose --file docker-compose.test.yml build
+            docker-compose --file docker-compose.test.yml run sut
+          else
+            cd TeXOnDotNet && docker build . --file Dockerfile
           fi
 
   # Push image to GitHub Packages.
@@ -50,15 +61,47 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME
+      - name: Build TeX on Fedora image
+        run: |
+          cd TeXOnFedora
+          docker build . --file Dockerfile --tag $FEDORA_IMAGE_NAME
+          cd -
+        
+      - name: Build TeX with .net on Ubuntu image
+        run: |
+          cd TeXOnDotNet
+          docker build . --file TeXOnDotNet/Dockerfile --tag $DOTNET_IMAGE_NAME
+          cd -
+        
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: Push image
+      - name: Push TeX on Fedora image
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$FEDORA_IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "main" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+
+      - name: Push TeX with .net image
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$DOTNET_IMAGE_NAME
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
