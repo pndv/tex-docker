@@ -70,7 +70,7 @@ jobs:
       - name: Build TeX with .net on Ubuntu image
         run: |
           cd TeXOnDotNet
-          docker build . --file TeXOnDotNet/Dockerfile --tag $DOTNET_IMAGE_NAME
+          docker build . --file Dockerfile --tag $DOTNET_IMAGE_NAME
           cd -
         
 
