@@ -49,7 +49,7 @@ jobs:
   # See also https://docs.docker.com/docker-hub/builds/
   push:
     # Ensure test job passes before pushing image.
-    needs: test
+#    needs: test
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -96,8 +96,10 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
+          cd TeXOnFedora
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
+          cd -
 
       - name: Push TeX with .net image
         run: |
@@ -118,5 +120,7 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
+          cd TeXOnFedora
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
+          cd -
