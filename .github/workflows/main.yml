@@ -96,8 +96,8 @@ jobs:
           echo VERSION=$VERSION
 
           cd TeXOnFedora
-          echo "docker tag $IMAGE_NAME $IMAGE_ID:$VERSION"
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          echo "docker tag $FEDORA_IMAGE_NAME $IMAGE_ID:$VERSION"
+          docker tag $FEDORA_IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
           cd -
 
@@ -120,7 +120,7 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
-          cd TeXOnFedora
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          cd TeXOnDotNet
+          docker tag $DOTNET_IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
           cd -
