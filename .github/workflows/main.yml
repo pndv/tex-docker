@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Run tests TeXOnFedora
         run: |
@@ -53,13 +53,13 @@ jobs:
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    #
-    #    permissions:
-    #      contents: read
-    #      packages: write
+
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Build TeX on Fedora image
         run: |
@@ -73,13 +73,12 @@ jobs:
           docker build . --file Dockerfile --tag $DOTNET_IMAGE_NAME
           cd -
         
-
       - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Push TeX on Fedora image
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$FEDORA_IMAGE_NAME
+          IMAGE_ID=ghcr.io/${{ github.repository }}/$FEDORA_IMAGE_NAME
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
@@ -97,13 +96,14 @@ jobs:
           echo VERSION=$VERSION
 
           cd TeXOnFedora
+          echo "docker tag $IMAGE_NAME $IMAGE_ID:$VERSION"
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
           cd -
 
       - name: Push TeX with .net image
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$DOTNET_IMAGE_NAME
+          IMAGE_ID=ghcr.io/${{ github.repository }}/$DOTNET_IMAGE_NAME
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')

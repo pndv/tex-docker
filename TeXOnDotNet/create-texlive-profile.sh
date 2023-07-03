@@ -1,5 +1,6 @@
-#############################
-selected_scheme scheme-full
+#!/bin/sh
+# Create texlive.profile using the shell, directly copying file is causing encoding issues between Windows/Unix
+cat <<EOF > texlive.profile
 TEXDIR /usr/local/texlive/
 TEXMFCONFIG ~/.texlivetexmf-config
 TEXMFHOME ~/texmf
@@ -7,6 +8,7 @@ TEXMFLOCAL /usr/local/texlive/texmf-local
 TEXMFSYSCONFIG /usr/local/texlive/texmf-config
 TEXMFSYSVAR /usr/local/texlive/texmf-var
 TEXMFVAR ~/.texlive/texmf-var
+selected_scheme scheme-full
 binary_x86_64-linux 1
 instopt_adjustpath 1
 instopt_adjustrepo 1
@@ -26,3 +28,4 @@ tlpdbopt_w32_multi_user 1
 tlpdbopt_desktop_integration 0
 tlpdbopt_install_docfiles 0
 tlpdbopt_install_srcfiles 0
+EOF

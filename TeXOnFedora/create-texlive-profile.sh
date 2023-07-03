@@ -1,5 +1,6 @@
-# It will NOT be updated and reflects only the
-# installation profile at installation time.
+#!/bin/sh
+
+cat <<EOF > texlive.profile
 selected_scheme scheme-custom
 TEXDIR /usr/local/texlive/2021
 TEXMFCONFIG ~/.texlive2021/texmf-config
@@ -28,6 +29,7 @@ collection-latex 1
 collection-latexextra 1
 collection-latexrecommended 1
 collection-luatex 1
+collection-luatex 1
 collection-mathscience 1
 collection-metapost 1
 collection-pictures 1
@@ -53,4 +55,4 @@ tlpdbopt_sys_bin /usr/bin
 tlpdbopt_sys_info /usr/local/info
 tlpdbopt_sys_man /usr/local/man
 tlpdbopt_w32_multi_user 1
-
+EOF
