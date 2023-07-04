@@ -23,11 +23,7 @@ jobs:
     strategy:
       matrix: 
         os: [ubuntu-latest]
-        include:
-          - dir: TeXOnFedora
-            imgName: texlive-fedora
-          - dir: TeXOnDotNet
-            imgName: texlive-dotnet
+        dir: [TeXOnFedora, TeXOnDotNet]
         
     runs-on: ${{ matrix.os }}
     
@@ -43,7 +39,8 @@ jobs:
 
       - name: Build ${{ matrix.dir }} and push image
         run: |
-          IMAGE_NAME=${{ matrix.imgName }}
+          [ ${{ matrix.dir }} = "TeXOnFedora" ] && IMAGE_NAME='texlive-fedora' || IMAGE_NAME='texlive-dotnet'
+          echo "Image name is ${IMAGE_NAME}"
           
           cd ${{ matrix.dir }}
           docker build . --file Dockerfile --tag ${IMAGE_NAME}
