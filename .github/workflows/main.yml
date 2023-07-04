@@ -19,66 +19,37 @@ env:
   
 
 jobs:
-  # Run tests.
-  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Run tests TeXOnFedora
-        run: |
-          if [ -f docker-compose.test.yml ]; then
-            docker-compose --file docker-compose.test.yml build
-            docker-compose --file docker-compose.test.yml run sut
-          else
-            cd TeXOnFedora && docker build . --file Dockerfile
-          fi
-
-      - name: Run tests TeXOnDotNet
-        run: |
-          if [ -f docker-compose.test.yml ]; then
-            docker-compose --file docker-compose.test.yml build
-            docker-compose --file docker-compose.test.yml run sut
-          else
-            cd TeXOnDotNet && docker build . --file Dockerfile
-          fi
-
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
-  push:
-    # Ensure test job passes before pushing image.
-#    needs: test
-
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
+  build_image:
+    strategy:
+      matrix: 
+        os: [ubuntu-latest]
+        include:
+          - dir: TeXOnFedora
+            imgName: texlive-fedora
+          - dir: TeXOnDotNet
+            imgName: texlive-dotnet
+        
+    runs-on: ${{ matrix.os }}
+    
     permissions:
       contents: read
       packages: write
-
+    
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build TeX on Fedora image
+      - name: Build ${{ matrix.dir }}
         run: |
-          cd TeXOnFedora
-          docker build . --file Dockerfile --tag $FEDORA_IMAGE_NAME
+          cd ${{ matrix.dir }}
+          docker build . --file Dockerfile --tag ${{ matrix.imgName }}
           cd -
-        
-      - name: Build TeX with .net on Ubuntu image
-        run: |
-          cd TeXOnDotNet
-          docker build . --file Dockerfile --tag $DOTNET_IMAGE_NAME
-          cd -
-        
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Push TeX on Fedora image
+      - name: Push image
         run: |
-          IMAGE_ID=ghcr.io/${{ github.repository }}/$FEDORA_IMAGE_NAME
+          IMAGE_ID=ghcr.io/${{ github.repository }}/${{ matrix.imgName }}
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
@@ -95,32 +66,8 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
-          cd TeXOnFedora
+          cd ${{ matrix.dir }}
           echo "docker tag $FEDORA_IMAGE_NAME $IMAGE_ID:$VERSION"
           docker tag $FEDORA_IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
-          cd -
-
-      - name: Push TeX with .net image
-        run: |
-          IMAGE_ID=ghcr.io/${{ github.repository }}/$DOTNET_IMAGE_NAME
-
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "main" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-
-          cd TeXOnDotNet
-          docker tag $DOTNET_IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
           cd -
