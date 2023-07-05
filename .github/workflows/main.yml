@@ -22,10 +22,9 @@ jobs:
   build_image:
     strategy:
       matrix: 
-        os: [ubuntu-latest]
         dir: [TeXOnFedora, TeXOnDotNet]
         
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     
     permissions:
       contents: read
