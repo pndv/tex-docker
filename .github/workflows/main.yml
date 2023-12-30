@@ -1,7 +1,7 @@
 name: Docker
 
 on:
-  push:
+  release:
     # Publish `main` as Docker `latest` image.
     branches:
       - main
@@ -16,6 +16,7 @@ on:
 env:
   FEDORA_IMAGE_NAME: texlive-fedora
   DOTNET_IMAGE_NAME: texlive-dotnet
+  REGISTRY: ghcr.io
   
 
 jobs:
@@ -31,10 +32,22 @@ jobs:
       packages: write
     
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
         
       - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        uses: docker/login-action@v2.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract images metadata
+        uses: docker/metadata-action@v4.6.0
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        
 
       - name: Build ${{ matrix.dir }} and push image
         run: |
